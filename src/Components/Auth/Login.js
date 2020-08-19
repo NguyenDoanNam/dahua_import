@@ -10,8 +10,38 @@ import Grid from "@material-ui/core/Grid";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
+import { firebase } from "../../firebase";
 
 class Login extends Component {
+  state = {
+    email: "",
+    password: "",
+    loading: false,
+  };
+
+  handleChange = (event) => {
+    this.setState({ [event.target.name]: event.target.value });
+  };
+
+  submitForm = (event) => {
+    let signInInfo = this.state;
+
+    event.preventDefault();
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(signInInfo.email, signInInfo.password)
+      .then(() => {
+        this.setState({ loading: false });
+        console.log("Login Success");
+      })
+      .catch((error) => {
+        console.log(error);
+        this.setState({
+          loading: false,
+        });
+      });
+  };
+
   render() {
     return (
       <div className={"signin_wrapper"}>
@@ -24,7 +54,7 @@ class Login extends Component {
             <Typography component="h1" variant="h5">
               Sign in
             </Typography>
-            <form noValidate>
+            <form onSubmit={(event) => this.submitForm(event)}>
               <TextField
                 variant="outlined"
                 margin="normal"
@@ -33,8 +63,8 @@ class Login extends Component {
                 id="email"
                 label="Email Address"
                 name="email"
-                autoComplete="email"
                 autoFocus
+                onChange={this.handleChange}
               />
               <TextField
                 variant="outlined"
@@ -45,7 +75,7 @@ class Login extends Component {
                 label="Password"
                 type="password"
                 id="password"
-                autoComplete="current-password"
+                onChange={this.handleChange}
               />
               <FormControlLabel
                 control={<Checkbox value="remember" color="primary" />}
@@ -56,6 +86,7 @@ class Login extends Component {
                 fullWidth
                 variant="contained"
                 color="primary"
+                onClick={(event) => this.submitForm(event)}
               >
                 Sign In
               </Button>
