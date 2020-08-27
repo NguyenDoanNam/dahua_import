@@ -1,12 +1,22 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import * as serviceWorker from "./serviceWorker";
-import Login from "./Components/Auth/Login";
 import "./Resources/css/app.css";
+import Routes from "./Components/Routes/Routes";
+
+import { BrowserRouter } from "react-router-dom";
+
+const App = (props) => {
+  return (
+    <BrowserRouter>
+      <Routes />
+    </BrowserRouter>
+  );
+};
 
 ReactDOM.render(
   <React.StrictMode>
-    <Login />
+    <App />
   </React.StrictMode>,
   document.getElementById("root")
 );
