@@ -2,13 +2,14 @@ import React, { Component } from "react";
 import Button from "@material-ui/core/Button";
 import SheetJSFT from "../Misc/UploadTypes";
 import XLSX from "xlsx";
-import MakeColumns from "../Misc/MakeColumns";
+import CustomizedTables from "../Tables/CustomizedTables";
 
 class Dashboard extends Component {
   state = {
     uploadRawFiles: [],
     uploadConvertFiles: [],
     functionName: "",
+    dataTables: null,
   };
 
   handleChange = (event) => {
@@ -26,72 +27,95 @@ class Dashboard extends Component {
         }
       }
       this.setState({ uploadRawFiles: uploadRawFiles, functionName: "upload" });
-    }
-  };
 
-  handleView = () => {
-    const uploadRawFiles = this.state.uploadRawFiles;
+      if (uploadRawFiles && uploadRawFiles.length > 0) {
+        let uploadConvertFiles = [];
+        for (let i = 0; i < uploadRawFiles.length; i++) {
+          let uploadRawFile = uploadRawFiles[i];
+          let contentFile = [];
+          let reader = new FileReader();
+          let rABS = !!reader.readAsBinaryString;
 
-    if (uploadRawFiles && uploadRawFiles.length > 0) {
-      let uploadConvertFiles = [];
-      for (let i = 0; i < uploadRawFiles.length; i++) {
-        let uploadRawFile = uploadRawFiles[i];
-        let contentFile = [];
-        let reader = new FileReader();
-        let rABS = !!reader.readAsBinaryString;
-
-        reader.onload = (e) => {
-          /* Parse data */
-          let bstr = e.target.result;
-          let wb = XLSX.read(bstr, {
-            type: rABS ? "binary" : "array",
-            bookVBA: true,
-          });
-          /* Get first worksheet */
-
-          for (let j = 0; j < wb.SheetNames.length; j++) {
-            let wsname = wb.SheetNames[j];
-            let ws = wb.Sheets[wsname];
-            /* Convert array of arrays */
-            let data = XLSX.utils.sheet_to_json(ws);
-
-            contentFile.push({
-              sheetName: wsname,
-              contentSheet: data,
-              columns: MakeColumns(ws["!ref"]),
+          reader.onload = (e) => {
+            /* Parse data */
+            let bstr = e.target.result;
+            let wb = XLSX.read(bstr, {
+              type: rABS ? "binary" : "array",
+              bookVBA: true,
             });
+            /* Get first worksheet */
+
+            for (let j = 0; j < wb.SheetNames.length; j++) {
+              let wsname = wb.SheetNames[j];
+              let ws = wb.Sheets[wsname];
+              /* Convert array of arrays */
+              let data = XLSX.utils.sheet_to_json(ws, {
+                header: 1,
+                defval: "",
+              });
+
+              contentFile.push({
+                sheetName: wsname,
+                columns: data[0],
+                contentSheet: data.slice(1),
+              });
+            }
+
+            uploadConvertFiles.push({
+              fileName: uploadRawFile.name,
+              contentFile: contentFile,
+            });
+            this.setState({
+              uploadConvertFiles: uploadConvertFiles,
+            });
+          };
+
+          if (rABS) {
+            reader.readAsBinaryString(uploadRawFile.content);
+          } else {
+            reader.readAsArrayBuffer(uploadRawFile.content);
           }
-
-          uploadConvertFiles.push({
-            fileName: uploadRawFile.name,
-            contentFile: contentFile,
-          });
-          this.setState({
-            uploadConvertFiles: uploadConvertFiles,
-          });
-        };
-
-        if (rABS) {
-          reader.readAsBinaryString(uploadRawFile.content);
-        } else {
-          reader.readAsArrayBuffer(uploadRawFile.content);
         }
       }
     }
   };
 
-  displayInputTable = () => {
+  handleView = () => {
     const uploadData = this.state.uploadConvertFiles;
-    console.log("in ra uploadData");
-    console.info(uploadData);
-    console.info(uploadData[0]);
+    let dataTables = [];
 
-    return <div>{uploadData && uploadData.map((file) => file.fileName)}</div>;
+    if (uploadData != null && !uploadData.isEmpty && uploadData.length > 0) {
+      for (let i = 0; i < uploadData.length; i++) {
+        if (uploadData[i].contentFile != null) {
+          for (let j = 0; j < uploadData[i].contentFile.length; j++) {
+            let dataTable = {
+              key: "File" + i + "Sheet" + j,
+              tableName:
+                uploadData[i].fileName +
+                " - " +
+                uploadData[i].contentFile[j].sheetName,
+              tableRows: uploadData[i].contentFile[j].contentSheet,
+              tableColumns: uploadData[i].contentFile[j].columns,
+            };
+            dataTables.push(dataTable);
+          }
+        }
+      }
+      this.setState({ dataTables: dataTables });
+      console.log(dataTables);
+    }
   };
 
-  handleProcess = () => {
-    console.info(this.state.uploadConvertFiles);
+  displayInputTable = () => {
+    const dataTables = this.state.dataTables;
+    return dataTables.map((dataTable, i) => (
+      <div key={i}>
+        <CustomizedTables key={dataTable.key} dataTable={dataTable} />
+      </div>
+    ));
   };
+
+  handleProcess = () => {};
 
   render() {
     return (
@@ -132,7 +156,9 @@ class Dashboard extends Component {
             Process
           </Button>
         </div>
-        <div>{this.displayInputTable()}</div>
+        <div>
+          {this.state.dataTables != null ? this.displayInputTable() : ""}
+        </div>
       </div>
     );
   }
