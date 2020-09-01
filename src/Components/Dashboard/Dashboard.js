@@ -3,6 +3,7 @@ import Button from "@material-ui/core/Button";
 import SheetJSFT from "../Misc/UploadTypes";
 import XLSX from "xlsx";
 import CustomizedTables from "../Tables/CustomizedTables";
+import MdbTable from "../Tables/MDBTable";
 
 class Dashboard extends Component {
   state = {
@@ -54,10 +55,13 @@ class Dashboard extends Component {
                 defval: "",
               });
 
+              let dataJson = XLSX.utils.sheet_to_json(ws);
+
               contentFile.push({
                 sheetName: wsname,
                 columns: data[0],
                 contentSheet: data.slice(1),
+                contentSheetJson: dataJson,
               });
             }
 
@@ -96,6 +100,36 @@ class Dashboard extends Component {
                 uploadData[i].contentFile[j].sheetName,
               tableRows: uploadData[i].contentFile[j].contentSheet,
               tableColumns: uploadData[i].contentFile[j].columns,
+              tableRowsJson: uploadData[i].contentFile[j].contentSheetJson,
+              dataTableJSON: {
+                columns: [
+                  {
+                    label: "STT",
+                    field: "STT",
+                    sort: "asc",
+                    width: 100,
+                  },
+                  {
+                    label: "Hang Nhap",
+                    field: "Hang Nhap",
+                    sort: "asc",
+                    width: 100,
+                  },
+                  {
+                    label: "Hang Ra",
+                    field: "Hang Ra",
+                    sort: "asc",
+                    width: 100,
+                  },
+                  {
+                    label: "Hang Con",
+                    field: "Hang Con",
+                    sort: "asc",
+                    width: 100,
+                  },
+                ],
+                rows: uploadData[i].contentFile[j].contentSheetJson,
+              },
             };
             dataTables.push(dataTable);
           }
@@ -107,10 +141,13 @@ class Dashboard extends Component {
   };
 
   displayInputTable = () => {
-    const dataTables = this.state.dataTables;
+    let dataTables = this.state.dataTables;
+
     return dataTables.map((dataTable, i) => (
       <div key={i}>
         <CustomizedTables key={dataTable.key} dataTable={dataTable} />
+        <br />
+        <MdbTable dataTable={dataTable.dataTableJSON} />
       </div>
     ));
   };

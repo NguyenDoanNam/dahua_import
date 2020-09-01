@@ -3,6 +3,9 @@ import ReactDOM from "react-dom";
 import * as serviceWorker from "./serviceWorker";
 import "./Resources/css/app.css";
 import Routes from "./Components/Routes/Routes";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import "bootstrap-css-only/css/bootstrap.min.css";
+import "mdbreact/dist/css/mdb.css";
 
 import { BrowserRouter } from "react-router-dom";
 
